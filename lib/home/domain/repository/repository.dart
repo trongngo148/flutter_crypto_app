@@ -5,11 +5,16 @@ class Repository {
   static String mainUrl = 'https://pro-api.coinmarketcap.com/v1/';
   final String apiKey = 'b064f8d7-9117-4438-8689-76742b0160ae';
   var currentListingAPI = '${mainUrl}cryptocurrency/listings/latest';
-  Dio _dio = Dio();
-  Future<BigDataModel> getCoins() async {
+  final Dio _dio = Dio();
+  Future<BigDataModel> getCoins(int startItem, int maxItems) async {
     try {
       _dio.options.headers["X-CMC_PRO_API_KEY"] = apiKey;
+      _dio.options.queryParameters = {"start": startItem, "limit": maxItems};
       Response response = await _dio.get(currentListingAPI);
+      // if (response.data != null) {
+      //   dataResponse = BigDataModel.fromJson(response.data);
+      //   notice();
+      // }
       return BigDataModel.fromJson(response.data);
     } catch (error, stackTrace) {
       print("exception $error, dd $stackTrace");

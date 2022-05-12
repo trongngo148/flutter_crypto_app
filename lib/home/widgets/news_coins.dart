@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_crypto_app/home/providers/home_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../domain/models/models.dart';
 import 'coin_card.dart';
 
-class NewsCoins extends StatelessWidget {
+class NewsCoins extends StatefulWidget {
   final List<DataModel> coins;
   const NewsCoins({Key? key, required this.coins}) : super(key: key);
 
+  @override
+  State<NewsCoins> createState() => _NewsCoinsState();
+}
+
+class _NewsCoinsState extends State<NewsCoins> {
+  final RefreshController refreshController = RefreshController(initialRefresh: true);
   @override
   Widget build(BuildContext context) {
     ThemeData _theme = Theme.of(context);
@@ -18,7 +27,7 @@ class NewsCoins extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "New Cryptocurrencies (${coins.length})",
+                "New Cryptocurrencies (${widget.coins.length})",
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
               // Text(
@@ -31,21 +40,41 @@ class NewsCoins extends StatelessWidget {
             height: 15.0,
           ),
           Container(
-            height: 600,
+            height: 450,
             width: double.infinity,
-            child: ListView.separated(
-                shrinkWrap: true,
-                itemBuilder: (BuildContext context, int index) {
-                  return CoinCard(
-                    coin: coins[index],
-                  );
-                },
-                separatorBuilder: (BuildContext context, int index) {
-                  return SizedBox(
-                    height: 15,
-                  );
-                },
-                itemCount: coins.length),
+            child: SmartRefresher(
+              enablePullUp: true,
+              onRefresh: () async {
+                // bool result = await Provider.of<HomeProvider>(context, listen: false).refreshOrLoadNewsCoin(isRefresh: true);
+                if (true) {
+                  refreshController.refreshCompleted();
+                } else {
+                  refreshController.refreshFailed();
+                }
+              },
+              onLoading: () async {
+                bool result = await Provider.of<HomeProvider>(context, listen: false).refreshOrLoadNewsCoin();
+                if (result) {
+                  refreshController.loadComplete();
+                } else {
+                  refreshController.loadFailed();
+                }
+              },
+              controller: refreshController,
+              child: ListView.separated(
+                  shrinkWrap: true,
+                  itemBuilder: (BuildContext context, int index) {
+                    return CoinCard(
+                      coin: widget.coins[index],
+                    );
+                  },
+                  separatorBuilder: (BuildContext context, int index) {
+                    return SizedBox(
+                      height: 15,
+                    );
+                  },
+                  itemCount: widget.coins.length),
+            ),
           ),
         ],
       ),

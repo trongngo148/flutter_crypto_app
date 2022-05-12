@@ -9,7 +9,7 @@ import 'home/providers/home_provider.dart';
 void main() {
   runApp(
     MultiProvider(
-      providers: [Provider(create: (context) => HomeProvider())],
+      providers: [ChangeNotifierProvider(create: (context) => HomeProvider())],
       child: Consumer(
         builder: (context, value, child) => GetMaterialApp(
           darkTheme: themeData(context),

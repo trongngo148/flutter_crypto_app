@@ -1,7 +1,11 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_crypto_app/home/domain/models/big_data_model.dart';
 import 'package:flutter_crypto_app/home/domain/repository/repository.dart';
+import 'package:flutter_crypto_app/home/providers/home_provider.dart';
 import 'package:flutter_crypto_app/home/widgets/notification_bell.dart';
+import 'package:provider/provider.dart';
 
 import '../domain/models/models.dart';
 import '../widgets/account_balance.dart';
@@ -15,34 +19,34 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late Future<BigDataModel> _futureCoins;
-  late Repository repository;
+  late HomeProvider homeProvider;
+  var coinData = <DataModel>[];
   @override
   void initState() {
-    // TODO: implement initState
-    repository = Repository();
-    _futureCoins = repository.getCoins();
-    print(_futureCoins);
     super.initState();
+    homeProvider = Provider.of<HomeProvider>(context, listen: false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBar(),
-      body: FutureBuilder<BigDataModel>(
-          future: _futureCoins,
-          builder: (context, snapshot) {
+      body: Consumer<HomeProvider>(builder: (context, provider, child) {
+        return FutureBuilder<BigDataModel>(
+          future: provider.newsCoin,
+          builder: ((context, snapshot) {
             if (snapshot.hasData) {
-              var coinData = snapshot.data!.dataModel;
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (!provider.isRefresh) {
+                  coinData.addAll(snapshot.data!.dataModel);
+                }
+              }
               return body(coinData);
-            } else if (snapshot.hasError) {
-              return Text('${snapshot.error}');
             }
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return Center(child: CircularProgressIndicator());
           }),
+        );
+      }),
     );
   }
 
@@ -53,8 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       centerTitle: true,
       title: Text("My Money"),
-      actions: [
-        Container(
+      actions: const [
+        SizedBox(
           height: 30,
           width: 30,
           child: CircleAvatar(
