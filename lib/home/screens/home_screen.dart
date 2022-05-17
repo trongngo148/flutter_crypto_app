@@ -37,8 +37,10 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: ((context, snapshot) {
             if (snapshot.hasData) {
               if (snapshot.connectionState == ConnectionState.done) {
-                if (!provider.isRefresh) {
+                if (provider.indexLoop > 0) {
                   coinData.addAll(snapshot.data!.dataModel);
+                } else {
+                  coinData = snapshot.data!.dataModel;
                 }
               }
               return body(coinData);

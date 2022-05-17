@@ -14,7 +14,7 @@ class NewsCoins extends StatefulWidget {
 }
 
 class _NewsCoinsState extends State<NewsCoins> {
-  final RefreshController refreshController = RefreshController(initialRefresh: true);
+  final RefreshController refreshController = RefreshController(initialRefresh: false);
   @override
   Widget build(BuildContext context) {
     ThemeData _theme = Theme.of(context);
@@ -45,8 +45,8 @@ class _NewsCoinsState extends State<NewsCoins> {
             child: SmartRefresher(
               enablePullUp: true,
               onRefresh: () async {
-                // bool result = await Provider.of<HomeProvider>(context, listen: false).refreshOrLoadNewsCoin(isRefresh: true);
-                if (true) {
+                bool result = await Provider.of<HomeProvider>(context, listen: false).refreshOrLoadNewsCoin(isRefresh: true);
+                if (result) {
                   refreshController.refreshCompleted();
                 } else {
                   refreshController.refreshFailed();
