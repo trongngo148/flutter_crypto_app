@@ -18,44 +18,144 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   late HomeProvider homeProvider;
   var coinData = <DataModel>[];
+  bool isCollapsed = true;
+  late double screenWidth, screenHeight;
+  final Duration duration = const Duration(milliseconds: 300);
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _menuScaleAnimation;
+
   @override
   void initState() {
     super.initState();
     homeProvider = Provider.of<HomeProvider>(context, listen: false);
+    _controller = AnimationController(vsync: this, duration: duration);
+    _scaleAnimation = Tween<double>(begin: 1, end: 0.6).animate(_controller);
+    _menuScaleAnimation = Tween<double>(begin: 0, end: 1).animate(_controller);
+    _slideAnimation = Tween<Offset>(begin: Offset(-1, 0), end: Offset(0, 0)).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: appBar(),
-      body: Consumer<HomeProvider>(builder: (context, provider, child) {
-        return FutureBuilder<BigDataModel>(
-          future: provider.newsCoin,
-          builder: ((context, snapshot) {
-            if (snapshot.hasData) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (provider.indexLoop > 0) {
-                  coinData.addAll(snapshot.data!.dataModel);
-                } else {
-                  coinData = snapshot.data!.dataModel;
-                }
+    Size size = MediaQuery.of(context).size;
+    screenHeight = size.height;
+    screenWidth = size.width;
+
+    return Stack(
+      children: [
+        menu(context),
+        AnimatedPositioned(
+          top: 0,
+          bottom: 0,
+          left: isCollapsed ? 0 : 0.6 * screenWidth,
+          right: isCollapsed ? 0 : -0.4 * screenWidth,
+          duration: duration,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: Material(
+              animationDuration: duration,
+              borderRadius: BorderRadius.all(Radius.circular(40)),
+              elevation: 8,
+              child: Scaffold(
+                appBar: appBar(),
+                body: body(),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Consumer<HomeProvider> body() {
+    return Consumer<HomeProvider>(builder: (context, provider, child) {
+      return FutureBuilder<BigDataModel>(
+        future: provider.newsCoin,
+        builder: ((context, snapshot) {
+          if (snapshot.hasData) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (provider.indexLoop > 0) {
+                coinData.addAll(snapshot.data!.dataModel);
+              } else {
+                coinData = snapshot.data!.dataModel;
               }
-              return body(coinData);
             }
-            return Center(child: CircularProgressIndicator());
-          }),
-        );
-      }),
+            return dashboard(coinData);
+          }
+          return Center(child: CircularProgressIndicator());
+        }),
+      );
+    });
+  }
+
+  Widget menu(context) {
+    return Scaffold(
+      body: SlideTransition(
+        position: _slideAnimation,
+        child: ScaleTransition(
+          scale: _menuScaleAnimation,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 16.0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    "Dashboard",
+                    style: TextStyle(color: Colors.white, fontSize: 22),
+                  ),
+                  Text(
+                    "Messages",
+                    style: TextStyle(color: Colors.white, fontSize: 22),
+                  ),
+                  Text(
+                    "Utility Bills",
+                    style: TextStyle(color: Colors.white, fontSize: 22),
+                  ),
+                  Text(
+                    "Funds Transfer",
+                    style: TextStyle(color: Colors.white, fontSize: 22),
+                  ),
+                  Text(
+                    "Branches",
+                    style: TextStyle(color: Colors.white, fontSize: 22),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
   AppBar appBar() {
     return AppBar(
       leading: GestureDetector(
-        child: Icon(Icons.menu),
+        child: IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () => setState(() {
+            if (isCollapsed) {
+              _controller.forward();
+            } else {
+              _controller.reverse();
+            }
+            isCollapsed = !isCollapsed;
+          }),
+        ),
       ),
       centerTitle: true,
       title: Text("My Money"),
@@ -76,9 +176,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget body(List<DataModel> coins) {
-    return SingleChildScrollView(
-        child: Column(
+  Widget dashboard(List<DataModel> coins) {
+    return Column(
       children: [
         SizedBox(
           height: 25.0,
@@ -94,10 +193,12 @@ class _HomeScreenState extends State<HomeScreen> {
         SizedBox(
           height: 15.0,
         ),
-        NewsCoins(
-          coins: coins,
+        Flexible(
+          child: NewsCoins(
+            coins: coins,
+          ),
         )
       ],
-    ));
+    );
   }
 }
