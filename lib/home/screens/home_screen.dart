@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_crypto_app/dashboard/screens/dashboard_screen.dart';
 import 'package:flutter_crypto_app/home/domain/models/big_data_model.dart';
 import 'package:flutter_crypto_app/home/domain/repository/repository.dart';
 import 'package:flutter_crypto_app/home/providers/home_provider.dart';
@@ -90,7 +91,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 coinData = snapshot.data!.dataModel;
               }
             }
-            return dashboard(coinData);
+            List<Widget> pages = [
+              DashboardScreen(coinData: coinData),
+            ];
+            return pages[0];
           }
           return Center(child: CircularProgressIndicator());
         }),
@@ -117,17 +121,29 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     "Dashboard",
                     style: TextStyle(color: Colors.white, fontSize: 22),
                   ),
+                  SizedBox(
+                    height: 10,
+                  ),
                   Text(
-                    "Messages",
+                    "Coin Stats",
                     style: TextStyle(color: Colors.white, fontSize: 22),
+                  ),
+                  SizedBox(
+                    height: 10,
                   ),
                   Text(
                     "Utility Bills",
                     style: TextStyle(color: Colors.white, fontSize: 22),
                   ),
+                  SizedBox(
+                    height: 10,
+                  ),
                   Text(
                     "Funds Transfer",
                     style: TextStyle(color: Colors.white, fontSize: 22),
+                  ),
+                  SizedBox(
+                    height: 10,
                   ),
                   Text(
                     "Branches",
@@ -172,32 +188,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           width: 10,
         ),
         NotificationBel()
-      ],
-    );
-  }
-
-  Widget dashboard(List<DataModel> coins) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 25.0,
-        ),
-        AccountBalance(),
-        SizedBox(
-          height: 40.0,
-        ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
-          child: Divider(color: Color.fromRGBO(97, 99, 119, 1)),
-        ),
-        SizedBox(
-          height: 15.0,
-        ),
-        Flexible(
-          child: NewsCoins(
-            coins: coins,
-          ),
-        )
       ],
     );
   }
